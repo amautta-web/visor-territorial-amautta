@@ -62,9 +62,10 @@ function getTipoProyecto(row) {
         const v = String(colOficial).trim().toUpperCase();
         if (v === 'RO' || v === 'PP') return v;
     }
-    if (row.__YEAR === 2026) return 'PP';
     const cod = row.__COD;
     if (cod && PROJECT_METADATA[cod]) return PROJECT_METADATA[cod].tipo;
+    // Fallback heredado: solo si el código de proyecto no está catalogado
+    if (row.__YEAR === 2026) return 'PP';
     return null;
 }
 
@@ -159,8 +160,9 @@ function precalcularCampos(rows) {
             if (v === 'RO' || v === 'PP') { row.__TIPO = v; }
         }
         if (!row.__TIPO) {
-            if (row.__YEAR === 2026) row.__TIPO = 'PP';
-            else if (row.__COD && PROJECT_METADATA[row.__COD]) row.__TIPO = PROJECT_METADATA[row.__COD].tipo;
+            if (row.__COD && PROJECT_METADATA[row.__COD]) row.__TIPO = PROJECT_METADATA[row.__COD].tipo;
+            // Fallback heredado: solo si el código de proyecto no está catalogado
+            else if (row.__YEAR === 2026) row.__TIPO = 'PP';
             else row.__TIPO = null;
         }
 
@@ -277,7 +279,7 @@ function buildCacheKey() {
 
 async function cargarExcel() {
     setLoad(10, 'Leyendo archivo 2026…');
-    const filas2026 = await leerArchivoExcel('PP PROYECTO 250071.xlsx', 2026, 'Selecciona PP PROYECTO 250071.xlsx');
+    const filas2026 = await leerArchivoExcel('BASE_2026.xlsx', 2026, 'Selecciona BASE_2026.xlsx');
 
     setLoad(30, 'Leyendo archivo 2025…');
     const filas2025 = await leerArchivoExcel('PA_PM_2025.xlsx', 2025, 'Selecciona PA_PM_2025.xlsx');
@@ -333,7 +335,6 @@ function obtenerCodigoProyectoRaw(row) {
         const val = String(colCanonica).trim();
         if (val && val !== 'undefined' && val !== 'null') return val;
     }
-    if (row.__YEAR === 2026) return '250071';
     for (let key in row) {
         if (key === '__YEAR') continue;
         const val = String(row[key]).trim();
@@ -793,6 +794,7 @@ function renderList() {
         }
     );
 }
+
 
 function sortBy(key, el) {
     currentSort = key;
