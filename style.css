@@ -115,6 +115,33 @@ header::after {
     display: none;
 }
 
+.share-btn {
+    flex-shrink: 0;
+    margin-left: 10px;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 1px solid var(--border2);
+    background: var(--surface2);
+    color: var(--text-dim);
+    font-size: 13px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color .15s ease, border-color .15s ease;
+}
+
+.share-btn:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+}
+
+.share-btn.copied {
+    color: var(--accent);
+    border-color: var(--accent);
+}
+
 .pill {
     background: var(--surface2);
     border: 1px solid var(--border);
@@ -255,6 +282,29 @@ header::after {
 .search-wrap {
     padding: 8px 10px;
     border-bottom: 1px solid var(--border);
+    position: relative;
+}
+
+.cmdk-hint {
+    position: absolute;
+    right: 18px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: var(--surface3);
+    border: 1px solid var(--border2);
+    border-radius: 5px;
+    color: var(--text-dim);
+    font-size: 9.5px;
+    font-weight: 600;
+    padding: 2px 6px;
+    cursor: pointer;
+    font-family: 'Space Grotesk', sans-serif;
+    transition: color .15s ease, border-color .15s ease;
+}
+
+.cmdk-hint:hover {
+    color: var(--accent);
+    border-color: var(--accent);
 }
 
 .search-wrap input {
@@ -379,11 +429,29 @@ header::after {
     text-overflow: ellipsis;
 }
 
+.commune-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    flex-shrink: 0;
+}
+
 .commune-count {
     font-size: 13px;
     font-weight: 700;
     color: var(--accent);
-    flex-shrink: 0;
+}
+
+.commune-meses {
+    font-size: 8.5px;
+    color: var(--text-muted);
+    margin-top: 1px;
+    white-space: nowrap;
+}
+
+.commune-meses.incomplete {
+    color: var(--accent3);
+    font-weight: 600;
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
@@ -554,6 +622,41 @@ header::after {
     color: var(--text);
     padding-right: 24px;
     line-height: 1.3;
+}
+
+.dp-export-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 14px;
+}
+
+.dp-export-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    padding: 7px 10px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-dim);
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    cursor: pointer;
+    transition: color .15s ease, border-color .15s ease, background .15s ease;
+    font-family: 'Space Grotesk', sans-serif;
+}
+
+.dp-export-btn:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+    background: var(--surface3);
+}
+
+.dp-export-btn:disabled {
+    opacity: .5;
+    cursor: wait;
 }
 
 #dp-empty {
@@ -841,5 +944,654 @@ header::after {
 
     .legend {
         display: none;
+    }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   TOOLTIP INFORMATIVO (ⓘ)
+   El ícono va inline donde se necesite aclarar una métrica. El bubble es un
+   único elemento reutilizado con position:fixed (no absolute) para que nunca
+   lo recorten contenedores con overflow:auto (.header-pills, .detail-panel).
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.info-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    color: var(--text-dim);
+    cursor: help;
+    line-height: 1;
+    transition: color .15s ease;
+}
+
+.info-icon:hover,
+.info-icon:focus,
+.info-icon.active {
+    color: var(--accent2);
+    outline: none;
+}
+
+.tip-bubble {
+    position: fixed;
+    max-width: 230px;
+    background: var(--surface3);
+    border: 1px solid var(--border2);
+    border-radius: 8px;
+    padding: 9px 11px;
+    font-size: 11px;
+    font-weight: 400;
+    line-height: 1.45;
+    color: var(--text);
+    text-transform: none;
+    letter-spacing: normal;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, .5);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translateY(4px);
+    transition: opacity .15s ease, transform .15s ease;
+    z-index: 5000;
+}
+
+.tip-bubble.visible {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   MINI GRÁFICO DE EVOLUCIÓN MENSUAL (panel de detalle)
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.dp-monthly-chart {
+    margin: -4px -4px 10px;
+    padding: 4px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background .15s ease;
+}
+
+.dp-monthly-chart:hover {
+    background: var(--surface2);
+}
+
+.mc-hint {
+    font-size: 10px;
+    color: var(--text-dim);
+    text-align: center;
+    margin-top: 2px;
+    letter-spacing: .03em;
+}
+
+.mini-chart {
+    width: 100%;
+    height: 78px;
+    display: block;
+    overflow: visible;
+}
+
+.mc-line {
+    fill: none;
+    stroke: var(--accent);
+    stroke-width: 1.6;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+}
+
+.mc-dot {
+    fill: var(--surface);
+    stroke: var(--accent);
+    stroke-width: 1.4;
+    cursor: default;
+}
+
+.mc-dot:hover {
+    fill: var(--accent);
+}
+
+.mc-label {
+    font-size: 6.6px;
+    fill: var(--text-muted);
+    font-family: 'Space Grotesk', sans-serif;
+}
+
+.mc-empty {
+    font-size: 11px;
+    color: var(--text-dim);
+    padding: 10px 0 4px;
+    text-align: center;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   MODAL DE GRÁFICO DETALLADO (click en el mini gráfico)
+   Pensado para que cualquiera lo entienda sin explicación previa: título +
+   frase en lenguaje natural con el hallazgo + gráfico con valores visibles
+   (no solo en hover) + nota de qué cuenta exactamente.
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.chart-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(3, 6, 12, 0.78);
+    backdrop-filter: blur(6px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity .2s ease;
+    padding: 20px;
+}
+
+.chart-modal-overlay.visible {
+    opacity: 1;
+    visibility: visible;
+}
+
+.chart-modal {
+    background: var(--card-bg);
+    border: 1px solid var(--border2);
+    border-radius: 16px;
+    padding: 28px 30px 22px;
+    width: min(720px, 100%);
+    max-height: calc(100vh - 40px);
+    overflow-y: auto;
+    box-shadow: 0 30px 80px rgba(0, 0, 0, .6), var(--glow);
+    position: relative;
+    transform: translateY(12px) scale(.98);
+    transition: transform .2s ease;
+}
+
+.chart-modal-overlay.visible .chart-modal {
+    transform: translateY(0) scale(1);
+}
+
+.chart-modal-close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 1px solid var(--border2);
+    background: var(--surface2);
+    color: var(--text-dim);
+    font-size: 13px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color .15s ease, border-color .15s ease;
+}
+
+.chart-modal-close:hover {
+    color: var(--text);
+    border-color: var(--accent);
+}
+
+.chart-modal-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 4px;
+    padding-right: 30px;
+}
+
+.chart-modal-filters {
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-bottom: 16px;
+}
+
+.chart-modal-summary {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: 8px;
+    padding: 12px 14px;
+    font-size: 13.5px;
+    line-height: 1.55;
+    color: var(--text);
+    margin-bottom: 20px;
+}
+
+.chart-modal-summary strong {
+    color: var(--accent);
+}
+
+.chart-modal-body {
+    margin-bottom: 14px;
+}
+
+.detailed-chart {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+.mcd-grid {
+    stroke: var(--border);
+    stroke-width: 1;
+}
+
+.mcd-axis-y,
+.mcd-axis-x {
+    font-size: 11px;
+    fill: var(--text-dim);
+    font-family: 'Space Grotesk', sans-serif;
+}
+
+.mcd-line {
+    fill: none;
+    stroke: var(--accent);
+    stroke-width: 2.5;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+}
+
+.mcd-dot {
+    fill: var(--surface);
+    stroke: var(--accent);
+    stroke-width: 2;
+}
+
+.mcd-dot-highlight {
+    fill: var(--accent);
+}
+
+.mcd-value {
+    font-size: 12px;
+    font-weight: 700;
+    fill: var(--text);
+    font-family: 'Space Grotesk', sans-serif;
+}
+
+.mcd-value-small {
+    font-size: 10px;
+}
+
+.mcd-year-sep {
+    stroke: var(--border2);
+    stroke-width: 1;
+    stroke-dasharray: 3 3;
+}
+
+.mcd-year-label {
+    font-size: 11px;
+    font-weight: 600;
+    fill: var(--text-dim);
+    font-family: 'Space Grotesk', sans-serif;
+    letter-spacing: .04em;
+}
+
+.mcd-stop-start {
+    stop-color: var(--accent);
+    stop-opacity: 0.35;
+}
+
+.mcd-stop-end {
+    stop-color: var(--accent);
+    stop-opacity: 0;
+}
+
+.chart-modal-note {
+    font-size: 11px;
+    color: var(--text-muted);
+    line-height: 1.5;
+}
+
+@media (max-width: 640px) {
+    .chart-modal {
+        padding: 22px 18px 18px;
+    }
+
+    .mcd-axis-x {
+        font-size: 9px;
+    }
+
+    .mcd-value {
+        font-size: 10px;
+    }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   EXPORTAR COMUNA (PNG / PDF)
+   Tarjeta de reporte con tema claro, separada de la UI oscura, para que se
+   vea bien impresa o pegada en un documento. Vive fuera de pantalla
+   (position:fixed, left:-10000px) salvo cuando se imprime (@media print).
+   Reutiliza las mismas clases .mcd-* del gráfico (buildDetailedLineChart)
+   redefiniendo aquí las variables de color que ellas consumen.
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.export-container {
+    position: fixed;
+    top: 0;
+    left: -10000px;
+    width: 780px;
+    z-index: -1;
+}
+
+.export-card {
+    --bg: #ffffff;
+    --surface: #ffffff;
+    --surface2: #f3f5f8;
+    --surface3: #eef1f5;
+    --border: #dde3ea;
+    --border2: #c9d2dc;
+    --accent: #009e80;
+    --accent2: #2f74c9;
+    --accent3: #d98a2b;
+    --accent4: #d94f4f;
+    --accent5: #8a4fd9;
+    --text: #1a2432;
+    --text-dim: #5a6b7d;
+    --text-muted: #94a3b3;
+
+    background: #ffffff;
+    color: var(--text);
+    font-family: 'Space Grotesk', sans-serif;
+    padding: 36px 40px;
+    width: 780px;
+    box-sizing: border-box;
+}
+
+.ec-header {
+    border-bottom: 2px solid var(--accent);
+    padding-bottom: 14px;
+    margin-bottom: 20px;
+}
+
+.ec-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 24px;
+    font-weight: 800;
+    color: var(--text);
+}
+
+.ec-subtitle {
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-top: 4px;
+}
+
+.ec-filters {
+    font-size: 11.5px;
+    color: var(--text-dim);
+    margin-top: 2px;
+}
+
+.ec-kpis {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 8px;
+}
+
+.ec-kpi {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 10px;
+    text-align: center;
+}
+
+.ec-kpi-val {
+    font-family: 'Syne', sans-serif;
+    font-size: 19px;
+    font-weight: 800;
+    color: var(--accent);
+}
+
+.ec-kpi-lbl {
+    font-size: 9.5px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    margin-top: 3px;
+}
+
+.ec-section-title {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+    margin-top: 22px;
+}
+
+.ec-summary {
+    background: var(--surface2);
+    border-left: 3px solid var(--accent);
+    border-radius: 6px;
+    padding: 10px 13px;
+    font-size: 12.5px;
+    line-height: 1.55;
+    color: var(--text);
+    margin-bottom: 14px;
+}
+
+.ec-summary strong {
+    color: var(--accent);
+}
+
+.ec-chart {
+    margin-bottom: 8px;
+}
+
+.ec-svc-list {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+
+.ec-svc-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+}
+
+.ec-svc-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.ec-svc-name {
+    flex: 1;
+    color: var(--text);
+}
+
+.ec-svc-count {
+    color: var(--text-dim);
+    font-weight: 600;
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
+.ec-footer {
+    margin-top: 26px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
+    font-size: 10px;
+    color: var(--text-muted);
+    line-height: 1.5;
+}
+
+.ec-empty {
+    font-size: 13px;
+    color: var(--text-dim);
+    padding: 30px 0;
+}
+
+@media print {
+    body > *:not(.export-container) {
+        display: none !important;
+    }
+
+    .export-container {
+        position: static;
+        left: 0;
+        width: 100%;
+        z-index: auto;
+    }
+
+    .export-card {
+        width: 100%;
+        box-shadow: none;
+    }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   COMMAND PALETTE (Ctrl/Cmd+K)
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.cmdk-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(3, 6, 12, 0.7);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: 12vh;
+    z-index: 10500;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity .15s ease;
+}
+
+.cmdk-overlay.visible {
+    opacity: 1;
+    visibility: visible;
+}
+
+.cmdk-box {
+    background: var(--card-bg);
+    border: 1px solid var(--border2);
+    border-radius: 14px;
+    width: min(560px, calc(100% - 32px));
+    max-height: 60vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 30px 80px rgba(0, 0, 0, .6), var(--glow);
+    overflow: hidden;
+    transform: translateY(-8px) scale(.98);
+    transition: transform .15s ease;
+}
+
+.cmdk-overlay.visible .cmdk-box {
+    transform: translateY(0) scale(1);
+}
+
+.cmdk-input-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+}
+
+.cmdk-icon {
+    color: var(--text-dim);
+    font-size: 14px;
+    flex-shrink: 0;
+}
+
+.cmdk-input {
+    flex: 1;
+    background: none;
+    border: none;
+    outline: none;
+    color: var(--text);
+    font-size: 14px;
+    font-family: 'Space Grotesk', sans-serif;
+}
+
+.cmdk-input::placeholder {
+    color: var(--text-muted);
+}
+
+.cmdk-results {
+    overflow-y: auto;
+    padding: 6px;
+}
+
+.cmdk-group-label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    color: var(--text-muted);
+    padding: 8px 10px 4px;
+}
+
+.cmdk-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--text);
+}
+
+.cmdk-item:hover,
+.cmdk-item.selected {
+    background: var(--surface2);
+}
+
+.cmdk-item.selected {
+    outline: 1px solid var(--accent);
+    outline-offset: -1px;
+}
+
+.cmdk-item-icon {
+    width: 18px;
+    text-align: center;
+    flex-shrink: 0;
+    font-size: 12px;
+}
+
+.cmdk-item-label {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.cmdk-item-meta {
+    font-size: 10.5px;
+    color: var(--text-dim);
+    flex-shrink: 0;
+}
+
+.cmdk-empty {
+    padding: 24px 16px;
+    text-align: center;
+    font-size: 12.5px;
+    color: var(--text-dim);
+}
+
+.cmdk-footer {
+    padding: 8px 14px;
+    border-top: 1px solid var(--border);
+    font-size: 10px;
+    color: var(--text-muted);
+    display: flex;
+    gap: 14px;
+    flex-shrink: 0;
+}
+
+@media (max-width: 640px) {
+    .cmdk-overlay {
+        padding-top: 8vh;
     }
 }
