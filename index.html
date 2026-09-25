@@ -28,9 +28,6 @@
     <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js" defer></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js" defer></script>
     <script src="app.js" defer></script>
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
-    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js" defer></script>
-    <script src="app.js" defer></script>
 </head>
 
 <body>
@@ -52,12 +49,13 @@
             <div class="header-sub">Georeferenciación dinámica · 21 comunas · 2024–2026</div>
         </div>
         <div class="header-pills">
-            <div class="pill">Registros: <span class="num" id="pill-total">—</span></div>
+            <div class="pill">Registros <span class="info-icon" data-tip="Cuenta filas (atenciones) que cumplen los filtros activos, no personas únicas. Si una persona recibió el mismo servicio varios meses, aparece una vez por cada mes reportado.">ⓘ</span>: <span class="num" id="pill-total">—</span></div>
             <div class="pill">Comunas: <span class="num" id="pill-comunas">—</span></div>
             <div class="pill">Servicios: <span class="num" id="pill-servicios">—</span></div>
             <div class="pill">Edad prom.: <span class="num" id="pill-edad">—</span></div>
             <div class="pill">Meses: <span class="num" id="pill-meses">—</span></div>
         </div>
+        <button class="share-btn" id="shareBtn" onclick="copyShareLink()" title="Copiar link con los filtros y la comuna actuales" aria-label="Copiar link">🔗</button>
     </header>
 
     <div class="view-tabs">
@@ -115,6 +113,7 @@
             </div>
             <div class="search-wrap">
                 <input id="search" type="text" placeholder="Buscar comuna…" oninput="renderList()">
+                <button class="cmdk-hint" onclick="openCmdk()" title="Búsqueda global: comunas, servicios y proyectos (Ctrl/Cmd+K)">⌘K</button>
             </div>
             <div class="commune-list" id="communeList"></div>
         </div>
@@ -124,12 +123,16 @@
             <div class="detail-panel" id="detailPanel">
                 <button class="close-btn" onclick="closeDetail()">✕</button>
                 <div class="dp-title" id="dp-title"></div>
+                <div class="dp-export-row">
+                    <button class="dp-export-btn" id="exportPngBtn" onclick="exportComunaPNG(activeCommune)" title="Descargar como imagen PNG">⬇ PNG</button>
+                    <button class="dp-export-btn" onclick="exportComunaPDF(activeCommune)" title="Abre el diálogo de impresión — elige &quot;Guardar como PDF&quot;">🖨 PDF</button>
+                </div>
                 <div id="dp-empty"
                     style="display:none;font-size:13px;color:var(--text-dim);margin-bottom:16px;line-height:1.5;"></div>
                 <div class="dp-kpi-grid">
                     <div class="dp-kpi">
                         <div class="val" id="dp-total" style="color:var(--accent)"></div>
-                        <div class="lbl">Total personas</div>
+                        <div class="lbl">Total atenciones <span class="info-icon" data-tip="Cada número de este panel cuenta atenciones (filas de la base), no personas únicas. Si alguien recibió el mismo servicio varios meses, se cuenta una vez por cada mes reportado — no es el número de personas ni de cupos disponibles.">ⓘ</span></div>
                     </div>
                     <div class="dp-kpi">
                         <div class="val" id="dp-edad" style="color:var(--accent2)"></div>
@@ -144,6 +147,9 @@
                         <div class="lbl">Hombres</div>
                     </div>
                 </div>
+
+                <div class="dp-section-title">Evolución mensual <span class="info-icon" data-tip="Muestra todos los periodos disponibles (todos los años y meses) para esta comuna, con los filtros de tipo/proyecto/servicio activos — ignora el filtro de mes/año actual, para que puedas ver si el total corresponde a varios meses o a un pico puntual.">ⓘ</span></div>
+                <div id="dp-monthly-chart" class="dp-monthly-chart"></div>
 
                 <div class="dp-section-title">Distribución por sexo</div>
                 <div class="dp-bar-row">
@@ -184,6 +190,30 @@
             </div>
         </div>
     </div>
+
+    <div class="chart-modal-overlay" id="chartModalOverlay" onclick="if(event.target===this) closeChartModal()">
+        <div class="chart-modal" role="dialog" aria-modal="true" aria-labelledby="chartModalTitle">
+            <button class="chart-modal-close" onclick="closeChartModal()" aria-label="Cerrar">✕</button>
+            <div class="chart-modal-title" id="chartModalTitle"></div>
+            <div class="chart-modal-filters" id="chartModalFilters"></div>
+            <div class="chart-modal-summary" id="chartModalSummary"></div>
+            <div class="chart-modal-body" id="chartModalBody"></div>
+            <div class="chart-modal-note" id="chartModalNote"></div>
+        </div>
+    </div>
+
+    <div class="cmdk-overlay" id="cmdkOverlay" onclick="if(event.target===this) closeCmdk()">
+        <div class="cmdk-box" role="dialog" aria-modal="true">
+            <div class="cmdk-input-row">
+                <span class="cmdk-icon">⌘</span>
+                <input type="text" id="cmdkInput" class="cmdk-input" placeholder="Buscar comuna, servicio o proyecto…" autocomplete="off">
+            </div>
+            <div class="cmdk-results" id="cmdkResults"></div>
+            <div class="cmdk-footer"><span>↑↓ navegar</span><span>↵ seleccionar</span><span>esc cerrar</span></div>
+        </div>
+    </div>
+
+    <div class="export-container" id="exportContainer"></div>
 
 </body>
 
