@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Georeferenciación — Personas Mayores Medellín 2024–2026</title>
+
+    <!-- Preconnect crítico para reducir latencia de fuentes y tiles -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://unpkg.com">
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Syne:wght@400;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="style.css" />
+
+    <!--
+        CARGA PARALELA:
+        Leaflet y XLSX se cargan de forma asíncrona (defer).
+        app.js también lleva defer, por lo que espera a que el DOM esté listo
+        pero no bloquea el pintado inicial de la página.
+    -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js" defer></script>
+    <script src="app.js" defer></script>
+</head>
+
+<body>
+
+    <div id="loadingOverlay">
+        <div class="loading-logo"></div>
+        <div class="loading-title">Visor territorial — Personas Mayores</div>
+        <div class="loading-sub">Cargando base de datos…</div>
+        <div class="loading-bar-wrap">
+            <div class="loading-bar" id="loadBar"></div>
+        </div>
+        <div id="loadingStatus">Inicializando…</div>
+    </div>
+
+    <header>
+        <div class="logo-mark"></div>
+        <div>
+            <div class="header-title">Personas Mayores — Medellín</div>
+            <div class="header-sub">Georeferenciación dinámica · 21 comunas · 2024–2026</div>
+        </div>
+        <div class="header-pills">
+            <div class="pill">Registros <span class="info-icon" data-tip="Cuenta filas (atenciones) que cumplen los filtros activos, no personas únicas. Si una persona recibió el mismo servicio varios meses, aparece una vez por cada mes reportado.">ⓘ</span>: <span class="num" id="pill-total">—</span></div>
+            <div class="pill">Comunas: <span class="num" id="pill-comunas">—</span></div>
+            <div class="pill">Servicios: <span class="num" id="pill-servicios">—</span></div>
+            <div class="pill">Edad prom.: <span class="num" id="pill-edad">—</span></div>
+            <div class="pill">Meses: <span class="num" id="pill-meses">—</span></div>
+        </div>
+        <button class="share-btn" id="shareBtn" onclick="copyShareLink()" title="Copiar link con los filtros y la comuna actuales" aria-label="Copiar link">🔗</button>
+    </header>
+
+    <div class="view-tabs">
+        <div class="vtab active" id="vtab-general" onclick="setProyectoTipo('GENERAL', this)">
+            ◈ General
+        </div>
+        <div class="vtab" id="vtab-ro" onclick="setProyectoTipo('RO', this)">
+            ◉ RO <span style="font-size:9px;opacity:.6">Recursos Ordinarios</span>
+        </div>
+        <div class="vtab" id="vtab-pp" onclick="setProyectoTipo('PP', this)">
+            ◉ PP <span style="font-size:9px;opacity:.6">Presupuesto Participativo</span>
+        </div>
+    </div>
+
+    <div class="main">
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <span></span>
+            </div>
+            <div class="month-filter-wrap">
+                <label>Proyecto</label>
+                <select id="subProyectoFilter" onchange="applyFilters()">
+                    <option value="">Todos los proyectos</option>
+                </select>
+            </div>
+
+            <div class="sidebar-header" style="margin-top: 4px;">
+                <span>Filtros y Orden</span>
+            </div>
+            <div class="filter-tabs" id="sortTabs">
+                <div class="ftab active" onclick="sortBy('total',this)">Total</div>
+                <div class="ftab" onclick="sortBy('mujeres',this)">Mujeres</div>
+                <div class="ftab" onclick="sortBy('hombres',this)">Hombres</div>
+            </div>
+            <div class="month-filter-wrap">
+                <label>Mes</label>
+                <select id="mesFilter" onchange="applyFilters()">
+                    <option value="">Todos los meses</option>
+                </select>
+            </div>
+            <div class="service-filter-wrap">
+                <label>Servicio</label>
+                <select id="servicioFilter" onchange="applyFilters()">
+                    <option value="">Todos los servicios</option>
+                </select>
+            </div>
+            <div class="month-filter-wrap">
+                <label>Año</label>
+                <select id="añoFilter" onchange="filtrarAño(this.value)">
+                    <option value="ALL">Todos</option>
+                    <option value="2026">2026</option>
+                    <option value="2025">2025</option>
+                    <option value="2024">2024</option>
+                </select>
+            </div>
+            <div class="search-wrap">
+                <input id="search" type="text" placeholder="Buscar comuna…" oninput="renderList()">
+                <button class="cmdk-hint" onclick="openCmdk()" title="Búsqueda global: comunas, servicios y proyectos (Ctrl/Cmd+K)">⌘K</button>
+            </div>
+            <div class="commune-list" id="communeList"></div>
+        </div>
+
+        <div id="mapView" style="position:relative; flex:1; display:flex; height:100%;">
+            <div id="map"></div>
+            <div class="detail-panel" id="detailPanel">
+                <button class="close-btn" onclick="closeDetail()">✕</button>
+                <div class="dp-title" id="dp-title"></div>
+                <div class="dp-export-row">
+                    <button class="dp-export-btn" id="exportPngBtn" onclick="exportComunaPNG(activeCommune)" title="Descargar como imagen PNG">⬇ PNG</button>
+                    <button class="dp-export-btn" onclick="exportComunaPDF(activeCommune)" title="Abre el diálogo de impresión — elige &quot;Guardar como PDF&quot;">🖨 PDF</button>
+                </div>
+                <div id="dp-empty"
+                    style="display:none;font-size:13px;color:var(--text-dim);margin-bottom:16px;line-height:1.5;"></div>
+                <div class="dp-kpi-grid">
+                    <div class="dp-kpi">
+                        <div class="val" id="dp-total" style="color:var(--accent)"></div>
+                        <div class="lbl">Total atenciones <span class="info-icon" data-tip="Cada número de este panel cuenta atenciones (filas de la base), no personas únicas. Si alguien recibió el mismo servicio varios meses, se cuenta una vez por cada mes reportado — no es el número de personas ni de cupos disponibles.">ⓘ</span></div>
+                    </div>
+                    <div class="dp-kpi">
+                        <div class="val" id="dp-edad" style="color:var(--accent2)"></div>
+                        <div class="lbl">Edad prom.</div>
+                    </div>
+                    <div class="dp-kpi">
+                        <div class="val" id="dp-muj" style="color:var(--accent5)"></div>
+                        <div class="lbl">Mujeres</div>
+                    </div>
+                    <div class="dp-kpi">
+                        <div class="val" id="dp-hom" style="color:var(--accent3)"></div>
+                        <div class="lbl">Hombres</div>
+                    </div>
+                </div>
+
+                <div class="dp-section-title">Evolución mensual <span class="info-icon" data-tip="Muestra todos los periodos disponibles (todos los años y meses) para esta comuna, con los filtros de tipo/proyecto/servicio activos — ignora el filtro de mes/año actual, para que puedas ver si el total corresponde a varios meses o a un pico puntual.">ⓘ</span></div>
+                <div id="dp-monthly-chart" class="dp-monthly-chart"></div>
+
+                <div class="dp-section-title">Distribución por sexo</div>
+                <div class="dp-bar-row">
+                    <div class="dp-bar-label"><span>Mujeres</span><span id="dp-muj-pct"></span></div>
+                    <div class="dp-bar-track">
+                        <div class="dp-bar-fill" id="dp-muj-bar" style="background:var(--accent5)"></div>
+                    </div>
+                </div>
+                <div class="dp-bar-row">
+                    <div class="dp-bar-label"><span>Hombres</span><span id="dp-hom-pct"></span></div>
+                    <div class="dp-bar-track">
+                        <div class="dp-bar-fill" id="dp-hom-bar" style="background:var(--accent3)"></div>
+                    </div>
+                </div>
+                <div class="dp-section-title">Servicios</div>
+                <div class="dp-service-list" id="dp-services"></div>
+                <div class="dp-section-title">Discapacidad / Etnia</div>
+                <div id="dp-discap" style="font-size:10px; color:var(--text-dim)"></div>
+            </div>
+
+            <div class="legend">
+                <div class="legend-title">Concentración de Personas</div>
+                <div class="legend-item">
+                    <div class="legend-swatch" style="background:#007d55"></div> Alta (&gt; 4 000)
+                </div>
+                <div class="legend-item">
+                    <div class="legend-swatch" style="background:#7fa13b"></div> Media-Alta (2 001 – 4 000)
+                </div>
+                <div class="legend-item">
+                    <div class="legend-swatch" style="background:#d4b22f"></div> Media (1 001 – 2 000)
+                </div>
+                <div class="legend-item">
+                    <div class="legend-swatch" style="background:#c95728"></div> Baja (301 – 1 000)
+                </div>
+                <div class="legend-item">
+                    <div class="legend-swatch" style="background:#a82c2c"></div> Muy Baja (1 – 300)
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="chart-modal-overlay" id="chartModalOverlay" onclick="if(event.target===this) closeChartModal()">
+        <div class="chart-modal" role="dialog" aria-modal="true" aria-labelledby="chartModalTitle">
+            <button class="chart-modal-close" onclick="closeChartModal()" aria-label="Cerrar">✕</button>
+            <div class="chart-modal-title" id="chartModalTitle"></div>
+            <div class="chart-modal-filters" id="chartModalFilters"></div>
+            <div class="chart-modal-summary" id="chartModalSummary"></div>
+            <div class="chart-modal-body" id="chartModalBody"></div>
+            <div class="chart-modal-note" id="chartModalNote"></div>
+        </div>
+    </div>
+
+    <div class="cmdk-overlay" id="cmdkOverlay" onclick="if(event.target===this) closeCmdk()">
+        <div class="cmdk-box" role="dialog" aria-modal="true">
+            <div class="cmdk-input-row">
+                <span class="cmdk-icon">⌘</span>
+                <input type="text" id="cmdkInput" class="cmdk-input" placeholder="Buscar comuna, servicio o proyecto…" autocomplete="off">
+            </div>
+            <div class="cmdk-results" id="cmdkResults"></div>
+            <div class="cmdk-footer"><span>↑↓ navegar</span><span>↵ seleccionar</span><span>esc cerrar</span></div>
+        </div>
+    </div>
+
+    <div class="export-container" id="exportContainer"></div>
+
+</body>
+
+</html>
