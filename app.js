@@ -288,7 +288,7 @@ function buildCacheKey() {
 
 async function cargarExcel() {
     setLoad(10, 'Leyendo archivo 2026…');
-    const filas2026 = await leerArchivoExcel('BASE_2026_1.xlsx', 2026, 'Selecciona BASE_2026_1.xlsx');
+    const filas2026 = await leerArchivoExcel('BASE_LIMPIA_2026.xlsx', 2026, 'Selecciona BASE_LIMPIA_2026.xlsx');
 
     setLoad(30, 'Leyendo archivo 2025…');
     const filas2025 = await leerArchivoExcel('PA_PM_2025.xlsx', 2025, 'Selecciona PA_PM_2025.xlsx');
